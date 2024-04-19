@@ -6,17 +6,16 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-
-
+import java.util.concurrent.ArrayBlockingQueue;
 
 
 public class sendCoordinate extends Thread {
-    private String message;
     private String ipAddress;
     private int port;
+    private ArrayBlockingQueue<String> messageQueue = new ArrayBlockingQueue<>(35);
+    boolean send = true;
 
-    public sendCoordinate(String message, String ipAddress, int port) {
-        this.message = message;
+    public sendCoordinate( String ipAddress, int port) {
         this.ipAddress = ipAddress;
         this.port = port;
     }
@@ -26,27 +25,38 @@ public class sendCoordinate extends Thread {
 
         DatagramSocket socket = null;
         try {
-            // Convert the message to bytes
-            byte[] sendData = message.getBytes();
+            while (send) {
+                // Convert the message to bytes
+                byte[] sendData = messageQueue.take().getBytes();
 
-            // Get the InetAddress object for the destination IP address
-            InetAddress address = InetAddress.getByName(ipAddress);
+                // Get the InetAddress object for the destination IP address
+                InetAddress address = InetAddress.getByName(ipAddress);
 
-            // Create a UDP socket
-            socket = new DatagramSocket();
+                // Create a UDP socket
+                socket = new DatagramSocket();
 
-            // Create a UDP packet with the message, destination address, and port
-            DatagramPacket packet = new DatagramPacket(sendData, sendData.length, address, port);
+                // Create a UDP packet with the message, destination address, and port
+                DatagramPacket packet = new DatagramPacket(sendData, sendData.length, address, port);
 
-            // Send the packet
-            socket.send(packet);
+                // Send the packet
+                socket.send(packet);
 
-            // Close the socket
-            socket.close();
+                // Close the socket
+                socket.close();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
             if (socket !=null) socket.close();
         }
+    }
+
+    public void stopMessage() {
+        send = false;
+        interrupt();
+    }
+
+    public void sendMessage(final String data){
+        messageQueue.offer(data);
     }
 }

@@ -21,6 +21,7 @@ public class MainActivity extends AppCompatActivity implements GPSCoordinate.Loc
     private TextView serverIp;
     private TextView serverPort;
     private GPSCoordinate locationTracker;
+    private sendCoordinate sender;
 
 
     @Override
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements GPSCoordinate.Loc
     protected void onDestroy() {
         super.onDestroy();
         locationTracker.stopListening();
+        sender.stopMessage();
     }
 
 
@@ -65,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements GPSCoordinate.Loc
         myEdit.apply();
         button.setText("Stop !!");
         // get and send location coordinate periodically until stoped
+        sender = new sendCoordinate(IP, Port);
+        sender.run();
 
     }
 
@@ -74,6 +78,6 @@ public class MainActivity extends AppCompatActivity implements GPSCoordinate.Loc
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
         Toast.makeText(MainActivity.this, "latitude: " + latitude +" longitude: "+ longitude, Toast.LENGTH_SHORT).show();
-
+        sender.sendMessage(""+latitude);
     }
 }
