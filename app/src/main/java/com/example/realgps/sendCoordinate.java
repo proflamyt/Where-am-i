@@ -1,11 +1,13 @@
 package com.example.realgps;
 
 import android.os.Handler;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.concurrent.ArrayBlockingQueue;
 
 
@@ -27,7 +29,10 @@ public class sendCoordinate extends Thread {
         try {
             while (send) {
                 // Convert the message to bytes
+
                 byte[] sendData = messageQueue.take().getBytes();
+
+                Log.v("Data To Send", "Message" + Arrays.toString(sendData));
 
                 // Get the InetAddress object for the destination IP address
                 InetAddress address = InetAddress.getByName(ipAddress);

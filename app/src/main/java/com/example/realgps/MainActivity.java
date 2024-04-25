@@ -18,6 +18,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Arrays;
+
 public class MainActivity extends AppCompatActivity implements GPSCoordinate.LocationChangeListener {
 
     private TextView serverIp;
@@ -32,11 +34,11 @@ public class MainActivity extends AppCompatActivity implements GPSCoordinate.Loc
 
         serverIp = findViewById(R.id.serverIP);
         serverPort = findViewById(R.id.serverPort);
+        Switch switchButton = findViewById(R.id.switch1);
 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Toast.makeText(MainActivity.this, "No Location Enabled", Toast.LENGTH_SHORT).show();
-            Log.v("GPS Error", "GPS is not enabled! Go to Settings and enable a location mode with GPS");
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             startActivity(intent);
         } else {
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements GPSCoordinate.Loc
             serverPort.setText(String.valueOf(port));
         }
 
-        Switch switchButton = findViewById(R.id.switch1);
+
         switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -79,27 +81,41 @@ public class MainActivity extends AppCompatActivity implements GPSCoordinate.Loc
     }
 
     public void connectEvent(View view) {
-        String ip = serverIp.getText().toString();
-        String portStr = serverPort.getText().toString();
-        if (TextUtils.isEmpty(ip) || TextUtils.isEmpty(portStr)) {
-            Toast.makeText(MainActivity.this, "Server and Port Please", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        int port = Integer.parseInt(portStr);
-
-        SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("ip", ip);
-        editor.putInt("port", port);
-        editor.apply();
 
         TextView button = findViewById(R.id.connect);
-        ToggleScreen(true);
-        button.setText("Stop !!");
+        String ip;
+        int port;
 
+        SharedPreferences sharedPreferences = getSharedPreferences("MySharedPref", MODE_PRIVATE);
+        ip = sharedPreferences.getString("ip", "");
+        port = sharedPreferences.getInt("port", 0);
+
+        if (!TextUtils.isEmpty(ip) || port != 0) {
+            ip = serverIp.getText().toString();
+            String portStr = serverPort.getText().toString();
+
+            if (TextUtils.isEmpty(ip) || TextUtils.isEmpty(portStr)) {
+                Toast.makeText(MainActivity.this, "Server and Port Please", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            port = Integer.parseInt(portStr);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString("ip", ip);
+            editor.putInt("port", port);
+            editor.apply();
+        }
+
+        Log.v("Connect Button", "Before Sending COordinate");
         sender = new sendCoordinate(ip, port);
-        sender.run();
+        if (button.getText().toString().equals("Connect")){
+        sender.start();
+        button.setText("Stop !!");
+        }
+        else {
+            button.setText("Connect");
+        }
+
     }
 
     @Override
